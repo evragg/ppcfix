@@ -1,8 +1,6 @@
 .git
 .env
 node_modules
-vendor
-storage
 tests
 .editorconfig
 .gitattributes

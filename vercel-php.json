@@ -1,7 +1,0 @@
-# Vercel PHP Configuration
-# This file tells Vercel how to handle PHP files
-
-functions:
-  api/index.php:
-    runtime: vercel-php@0.7.1
-    maxDuration: 10
