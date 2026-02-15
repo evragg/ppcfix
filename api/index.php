@@ -1,17 +1,9 @@
 <?php
 
-// Enable error reporting for debugging (remove in production after fixing)
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
-
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
-
-// Set the base path
-$_SERVER['DOCUMENT_ROOT'] = __DIR__ . '/../public';
 
 // Ensure storage directories exist in /tmp for Vercel
 $storagePath = '/tmp/storage';
@@ -24,7 +16,7 @@ $dirs = [
 
 foreach ($dirs as $dir) {
     if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
+        @mkdir($dir, 0755, true);
     }
 }
 
@@ -34,6 +26,10 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 }
 
 // Register the Composer autoloader...
+if (!file_exists(__DIR__.'/../vendor/autoload.php')) {
+    die('Composer dependencies not installed. Please run: composer install');
+}
+
 require __DIR__.'/../vendor/autoload.php';
 
 // Bootstrap Laravel and handle the request...
@@ -46,15 +42,19 @@ try {
     
     $app->handleRequest(Request::capture());
 } catch (\Throwable $e) {
-    // Log the error and return a friendly message
+    // Log the error
     error_log('Laravel Error: ' . $e->getMessage());
+    error_log('File: ' . $e->getFile() . ':' . $e->getLine());
     error_log('Stack trace: ' . $e->getTraceAsString());
     
+    // Return error response
     http_response_code(500);
+    header('Content-Type: application/json');
     echo json_encode([
         'error' => 'Application Error',
         'message' => $e->getMessage(),
         'file' => $e->getFile(),
         'line' => $e->getLine(),
-    ]);
+        'trace' => explode("\n", $e->getTraceAsString())
+    ], JSON_PRETTY_PRINT);
 }
